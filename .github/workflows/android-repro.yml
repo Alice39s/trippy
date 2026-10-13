@@ -1,0 +1,36 @@
+name: Android repro
+
+on:
+  push:
+    branches: [android-repro]
+
+jobs:
+  repro:
+    name: trip ${{ matrix.name }} on Android x86_64
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: master, rev: 15e61c8 }
+          - { name: fix, rev: fix-android-ipv4-byte-order }
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ matrix.rev }}
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-linux-android
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-ndk
+      - run: ANDROID_NDK_HOME="$ANDROID_NDK_LATEST_HOME" cargo ndk --platform 24 --target x86_64-linux-android build --release --bin trip
+      - name: Trace 127.0.0.1 and ::1 as root in the Termux image
+        run: |
+          for target in 127.0.0.1 ::1; do
+            echo "== trip ${target}"
+            status=0
+            docker run --rm -v "$PWD/target/x86_64-linux-android/release:/data/trip:ro" --entrypoint /entrypoint_root.sh \
+              termux/termux-docker:x86_64 /data/trip/trip "$target" --mode pretty --report-cycles 2 || status=$?
+            echo "exit status ${status}"
+          done
