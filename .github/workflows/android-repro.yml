@@ -12,7 +12,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { name: master, rev: 15e61c8 }
+          - { name: master, rev: master }
           - { name: fix, rev: fix-android-ipv4-byte-order }
     steps:
       - uses: actions/checkout@v5
