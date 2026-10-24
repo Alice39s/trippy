@@ -25,6 +25,11 @@ jobs:
         with:
           tool: cargo-ndk
       - run: ANDROID_NDK_HOME="$ANDROID_NDK_LATEST_HOME" cargo ndk --platform 24 --target x86_64-linux-android build --release --bin trip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: trip-${{ matrix.name }}-x86_64-linux-android
+          path: target/x86_64-linux-android/release/trip
+          retention-days: 7
       - name: Trace 127.0.0.1 and ::1 as root in the Termux image
         run: |
           for target in 127.0.0.1 ::1; do
